@@ -1,0 +1,85 @@
+import mongoose from 'mongoose'
+import { Clientes } from "./db"
+import { rejects } from 'assert'
+
+
+export const resolvers = {
+  Query: {
+
+
+    // ------------
+    getClientes:(root,{limite})=>{
+      return Clientes.find({}).limit(limite)
+    },
+
+    getCliente: (root, { id }) => {
+       return new Promise((resolve,object)=>{
+          Clientes.findById(id, (error,cliente)=>{
+            if (error) rejects(error)
+              else resolve(cliente) 
+            })
+
+        })
+    }
+
+    // ------------
+  },
+  Mutation: {
+
+    // ----------------
+
+   crearCliente: (root,{ input }) => {
+
+      // creamos el objeto
+      const nuevoCliente = new Clientes({
+       nombre : input.nombre,
+       apellido : input.apellido,
+       empresa : input.empresa,
+       email : input.email,
+       edad : input.edad,
+       tipo : input.tipo,
+       pedidos : input.pedidos
+     })
+        // mongo agrege automaticamente un id
+        nuevoCliente.id= nuevoCliente._id
+
+        return new Promise((resolve,object)=>{
+          nuevoCliente.save((error)=>{
+            if (error) {
+              rejects(error); 
+            } else {
+              resolve(nuevoCliente)
+            }
+          })
+        })
+
+      },
+
+      // {new:true} => si no existe crea uno nuevo
+      actualizarCliente:(root,{ input }) => {
+        return new Promise((resolve,object)=>{
+          Clientes.findOneAndUpdate({ _id : input.id }, input, {new:true}, (error,cliente)=>{
+            if (error) rejects(error)
+              else resolve(cliente)
+            })
+
+        })
+
+      },
+      // 
+      eliminarCliente:(root, { id })=>{
+        return new Promise((resolve,object)=>{
+          Clientes.findOneAndRemove({_id:id},(error)=>{
+            if (error) rejects(error)
+              else resolve("Se Eliminó correctamente")
+            })
+        });
+      }
+
+
+      // ----------------
+
+    }
+  }
+
+
