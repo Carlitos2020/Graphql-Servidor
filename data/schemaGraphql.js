@@ -6,7 +6,7 @@ type Cliente {
     nombre: String
     apellido: String
     empresa: String
-    email: String
+    emails: [Email]
     edad: Int
     tipo: TipoCliente
     pedidos: [Pedido]
@@ -27,8 +27,10 @@ type Pedido {
 #Obtener  Datos del Cliente
 type Query {
     #Obtener los Clientes
-    getClientes(limite: Int) : [Cliente]
+    getClientes(limite: Int , offset: Int) : [Cliente]
     getCliente(id: ID): Cliente
+    totalClientes: String
+
 }
 
 
@@ -50,7 +52,7 @@ input ClienteInput {
     nombre: String!
     apellido: String!
     empresa: String!
-    email: String
+    emails: [EmailInput]
     edad: Int!
     tipo: TipoCliente!
     pedidos: [PedidoInput]
