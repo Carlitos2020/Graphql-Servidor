@@ -1,6 +1,9 @@
 import mongoose from 'mongoose'
 mongoose.Promise = global.Promise
 mongoose.connect('mongodb://localhost/clientes',{userNewUrlParser:true})
+// mongoose.set('setFindAndModify',false);
+
+
 
 // Definir el Schema de Cliente
 // Checar el Resolvers
@@ -15,6 +18,17 @@ const clientesSchema= new mongoose.Schema({
 })
 
 // crear la tabla con el sgt Schema
-const Clientes = mongoose.model('clientes',clientesSchema)
+const Clientes = mongoose.model('clientes',clientesSchema);
 
-export { Clientes };
+
+
+// PRODUCTOS
+const productosSchema= new mongoose.Schema({
+    nombre:String,
+    precio: Number,
+    stock : Number
+})
+
+const Productos = mongoose.model('productos',productosSchema);
+
+export { Clientes , Productos};

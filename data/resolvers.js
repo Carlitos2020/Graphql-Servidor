@@ -1,5 +1,5 @@
 import mongoose from 'mongoose'
-import { Clientes } from "./db"
+import { Clientes, Productos } from "./db"
 import { rejects } from 'assert'
 
 
@@ -7,22 +7,22 @@ export const resolvers = {
   Query: {
 
 
-    // ------------
-    getClientes:(root,{limite , offset})=>{
-      return Clientes.find({}).limit(limite).skip(offset)
-    },
+      // ------------
+      getClientes:(root,{limite , offset})=>{
+        return Clientes.find({}).limit(limite).skip(offset)
+      },
 
-    getCliente: (root, { id }) => {
-       return new Promise((resolve,object)=>{
+      getCliente: (root, { id }) => {
+         return new Promise((resolve,object)=>{
           Clientes.findById(id, (error,cliente)=>{
             if (error) rejects(error)
               else resolve(cliente) 
             })
 
         })
-    },
+     },
 
-    totalClientes:(root) =>{
+     totalClientes:(root) =>{
       return new Promise( (resolve,object)=>{
         Clientes.countDocuments({},(error,count)=>{
           if(error) rejects(error);
@@ -30,7 +30,23 @@ export const resolvers = {
         })
 
       })
-    }
+    },
+
+
+    obtenerProductos:(root, { limite, offset})=> {
+     return Productos.find({}).limit(limite).skip(offset)
+    },
+
+    obtenerProducto: (root, { id }) => {
+         return new Promise((resolve,object)=>{
+          Productos.findById(id, (error,producto)=>{
+            if (error) rejects(error)
+              else resolve(producto) 
+            })
+
+        })
+     }
+
 
     // ------------
   },
@@ -38,7 +54,7 @@ export const resolvers = {
 
     // ----------------
 
-   crearCliente: (root,{ input }) => {
+    crearCliente: (root,{ input }) => {
 
       // creamos el objeto
       const nuevoCliente = new Clientes({
@@ -55,11 +71,8 @@ export const resolvers = {
 
         return new Promise((resolve,object)=>{
           nuevoCliente.save((error)=>{
-            if (error) {
-              rejects(error); 
-            } else {
-              resolve(nuevoCliente)
-            }
+            if (error)  rejects(error); 
+            else resolve(nuevoCliente)
           })
         })
 
@@ -79,15 +92,61 @@ export const resolvers = {
       // 
       eliminarCliente:(root, { id })=>{
         return new Promise((resolve,object)=>{
-          Clientes.findOneAndRemove({_id:id},(error)=>{
+          Clientes.findOneAndDelete({_id:id},(error)=>{
             if (error) rejects(error)
               else resolve("Se Eliminó correctamente")
+            })
+        });
+      },
+
+
+      // ----------------PRODUCTOS-----
+      nuevoProducto:(root,{input}) => {
+        const nuevoProducto = new  Productos({
+          nombre: input.nombre,
+          precio: input.precio,
+          stock : input.stock
+        })
+        
+        // Mongo DB crea el ID que se asigna al objeto
+        nuevoProducto.id = nuevoProducto._id
+
+        return new Promise((resolve,object)=>{
+          nuevoProducto.save((error)=>{
+            if (error)  rejects(error); 
+            else resolve(nuevoProducto)
+          })
+        })
+
+
+      },
+
+       // {new:true} => si no existe crea uno nuevo
+      actualizarProducto:(root,{ input }) => {
+        return new Promise((resolve,object)=>{
+          Productos.findOneAndUpdate({ _id : input.id }, input, {new:true}, (error,producto)=>{
+            if (error) rejects(error)
+              else resolve(producto)
+            })
+
+        })
+
+      },
+       eliminarProducto:(root, { id })=>{
+        return new Promise((resolve,object)=>{
+          Productos.findOneAndDelete({_id:id},(error)=>{
+            if (error) rejects(error)
+              else resolve("Se Eliminó Producto correctamente")
             })
         });
       }
 
 
-      // ----------------
+
+
+
+
+      // -----------------------------------
 
     }
   }

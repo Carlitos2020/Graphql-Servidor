@@ -24,6 +24,18 @@ type Pedido {
     precio: Int
 }
 
+
+type Producto{
+    id: ID
+    nombre: String!
+    precio : Int!
+    stock: Int!
+}
+
+
+
+
+
 #Obtener  Datos del Cliente
 type Query {
     #Obtener los Clientes
@@ -31,7 +43,12 @@ type Query {
     getCliente(id: ID): Cliente
     totalClientes: String
 
+    #Producto
+    obtenerProductos(limite: Int ,offset : Int) : [Producto]
+    obtenerProducto(id:ID): Producto
 }
+
+
 
 
 
@@ -58,21 +75,37 @@ input ClienteInput {
     pedidos: [PedidoInput]
 }
 
-
+input ProductoInput{
+    id: ID
+    nombre: String!
+    precio : Int!
+    stock: Int!
+}
 
 
 
 #Operaciones Clientes
 type Mutation {
-""" Te permite Crear nuevos Clientes """
+
+    """ Te permite Crear nuevos Clientes """
     crearCliente(input: ClienteInput): Cliente
 
-""" Actualizando clientes """
+    """ Actualizando clientes """
     actualizarCliente(input: ClienteInput): Cliente
 
-""" Eliminar cliente """
+    """ Eliminar cliente """
     eliminarCliente(id: ID!): String
 
+
+
+
+    """ Producto """
+    nuevoProducto( input: ProductoInput) : Producto
+
+    """ Actualizando Producto """
+    actualizarProducto(input: ProductoInput): Producto
+    
+    eliminarProducto(id: ID!): String
 }
 
 
