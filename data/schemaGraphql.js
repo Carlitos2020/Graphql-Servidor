@@ -46,6 +46,7 @@ type Query {
     #Producto
     obtenerProductos(limite: Int ,offset : Int) : [Producto]
     obtenerProducto(id:ID): Producto
+    totalProductos: String
 }
 
 
