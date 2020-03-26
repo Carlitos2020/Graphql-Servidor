@@ -1,5 +1,5 @@
 import mongoose from 'mongoose'
-import { Clientes, Productos } from "./db"
+import { Clientes, Productos ,Pedidos} from "./db"
 import { rejects } from 'assert'
 
 
@@ -32,10 +32,20 @@ export const resolvers = {
 				})
 			},
 
+			//Filtrar los productos que tienen mas de cero en Stock  
 
+			// obtenerProductos:(root, { limite, offset})=> {
+			// 	return Productos.find({}).limit(limite).skip(offset)
+			// },
 
-			obtenerProductos:(root, { limite, offset})=> {
-				return Productos.find({}).limit(limite).skip(offset)
+			obtenerProductos:(root, { limite, offset, stock })=> {
+				let  filtro;
+
+				if (stock) {
+					filtro = {stock : {$gt : 0}} 
+				}
+				
+				return Productos.find(filtro).limit(limite).skip(offset)
 			},
 
 			obtenerProducto: (root, { id }) => {
@@ -55,7 +65,19 @@ export const resolvers = {
 					})
 
 				})
-			}
+			},
+
+			totalPedidosCliente:(root,{id_cliente}) =>{
+				return new Promise( (resolve,object)=>{
+					Pedidos.find({cliente: id_cliente},(error,todosPedidos)=>{
+						if(error) rejects(error);
+						else resolve(todosPedidos);
+					})
+
+				})
+			},
+
+
 
 		// ------------
 	},
@@ -142,6 +164,7 @@ export const resolvers = {
 			 	})
 
 			 },
+
 			 eliminarProducto:(root, { id })=>{
 			 	return new Promise((resolve,object)=>{
 			 		Productos.findOneAndDelete({_id:id},(error)=>{
@@ -149,12 +172,82 @@ export const resolvers = {
 			 				else resolve("Se Eliminó Producto correctamente")
 			 			})
 			 	});
+			 },
+
+
+			 nuevoPedido:(root,{input})=>{
+
+			 	const nuevoPedido=new Pedidos({
+			 		pedido:input.pedido,
+			 		total: input.total,
+			 		fecha: new Date(),
+			 		cliente: input.cliente,
+			 		estado:"PENDIENTE"
+			 	});
+
+			 	nuevoPedido.id= nuevoPedido._id
+
+			 	return new Promise((resolve,object)=>{
+
+				 		// Para actualizar el Stock de la Tabla Productos
+				 		input.pedido.forEach(pedido =>{
+				 			Productos.updateOne({_id: pedido.id},
+				 			{
+				 				"$inc":
+				 				{"stock": -pedido.cantidad}
+				 			},function(error){
+				 				if(error) return new Error(error)
+				 			}
+				 		)
+				 		});
+				 		// -----------------
+
+				 		nuevoPedido.save((error)=>{
+				 			if (error)  rejects(error); 
+				 			else resolve(nuevoPedido)
+				 		})
+				 	});
+
+			 },
+
+			 actualizarEstado:(root, {input})=>{
+			 	return new Promise((resolve,object)=>{
+
+			 		// recorrer y actualizar la cantidad de productos en base
+			 		// al estado del pedido
+
+			 		const {estado} = input;
+			 		let instruccion;
+			 		if(estado === 'COMPLETADO'){
+			 			instruccion='-';
+			 		}else if(estado === 'CANCELADO'){
+			 			instruccion='+';
+			 		}
+
+			 		input.pedido.forEach(pedido =>{
+			 			Productos.updateOne({_id: pedido.id},
+			 			{
+			 				"$inc":
+			 				{"stock": `${instruccion}${pedido.cantidad}`}
+			 			},function(error){
+			 				if(error) return new Error(error)
+			 			}
+			 		)
+			 		});
+				 		// -----------------
+
+				 		Pedidos.findOneAndUpdate({_id:input.id}, input , {new:true} , (error)=>{
+				 			if(error) rejects(error);
+				 			else resolve('Se actualizó correctamente');
+				 		})
+				 	})
+			 	
 			 }
 
 
 
-
 			// -----------------------------------
+
 
 		}
 	}

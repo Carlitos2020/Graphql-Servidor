@@ -9,7 +9,6 @@ type Cliente {
     emails: [Email]
     edad: Int
     tipo: TipoCliente
-    pedidos: [Pedido]
 }
 type Email {
     email: String
@@ -19,11 +18,11 @@ enum TipoCliente {
     PREMIUM
     BASICO
 }
-type Pedido {
-    producto: String
-    precio: Int
+enum EstadoPedido {
+    PENDIENTE
+    COMPLETADO
+    CANCELADO
 }
-
 
 type Producto{
     id: ID
@@ -31,6 +30,21 @@ type Producto{
     precio : Int!
     stock: Int!
 }
+
+
+type PedidoProducto{
+    id:ID
+    cantidad: Int
+}
+type Pedido{
+    id: ID
+    pedido:[PedidoProducto]
+    total: Int
+    fecha: String
+    cliente: ID
+    estado: EstadoPedido
+}
+
 
 
 
@@ -44,9 +58,12 @@ type Query {
     totalClientes: String
 
     #Producto
-    obtenerProductos(limite: Int ,offset : Int) : [Producto]
+    obtenerProductos(limite: Int ,offset : Int,stock : Boolean) : [Producto]
     obtenerProducto(id:ID): Producto
     totalProductos: String
+
+    #pedidos
+    totalPedidosCliente(id_cliente : String) : [Pedido]
 }
 
 
@@ -55,12 +72,6 @@ type Query {
 
 
 
-
-
-input PedidoInput {
-    producto: String
-    precio: Int
-}
 input EmailInput {
     email: String
 }
@@ -82,6 +93,19 @@ input ProductoInput{
     precio : Int!
     stock: Int!
 }
+input PedidoProductoInput{
+    id:ID
+    cantidad: Int
+}
+input PedidoInput{
+    id: ID
+    pedido:[PedidoProductoInput]
+    total: Int
+    fecha: String
+    cliente: ID
+    estado: EstadoPedido
+}
+
 
 
 
@@ -107,6 +131,13 @@ type Mutation {
     actualizarProducto(input: ProductoInput): Producto
     
     eliminarProducto(id: ID!): String
+
+
+
+
+    """PEDIDOS"""
+     nuevoPedido(input: PedidoInput) : Pedido
+     actualizarEstado( input : PedidoInput ) : String
 }
 
 
