@@ -45,7 +45,10 @@ type Pedido{
     estado: EstadoPedido
 }
 
-
+type ClienteTotal{
+    total: Float
+    cliente : [Cliente]
+}
 
 
 
@@ -63,7 +66,10 @@ type Query {
     totalProductos: String
 
     #pedidos
-    totalPedidosCliente(id_cliente : String) : [Pedido]
+    totalPedidosCliente(id_cliente : ID) : [Pedido]
+
+    #Graficas
+    topClientes : [ClienteTotal]
 }
 
 

@@ -38,7 +38,7 @@ const pedidoSchema= new mongoose.Schema({
     pedido: Array,
     total: Number,
     fecha: Date,
-    cliente:String,
+    cliente:mongoose.Types.ObjectId,
     estado:String
 })
 
