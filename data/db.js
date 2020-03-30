@@ -1,4 +1,8 @@
 import mongoose from 'mongoose'
+import bcrypt from 'bcrypt'
+
+
+
 mongoose.Promise = global.Promise
 mongoose.connect('mongodb://localhost/clientes',{userNewUrlParser:true})
 // mongoose.set('setFindAndModify',false);
@@ -44,5 +48,32 @@ const pedidoSchema= new mongoose.Schema({
 
 const Pedidos = mongoose.model('pedidos',pedidoSchema);
 
+// Usuarios
+const usuariosSchema= new mongoose.Schema({
+    usuario: String,
+    password: String
+})
 
-export { Clientes , Productos , Pedidos};
+// hashear los password antes de guardarlos en ls bd
+usuariosSchema.pre('save' , function(next){
+   
+    // si el password no esta modificado ejecutar la sig funcion
+    if( !this.isModified('password') ) return next();
+
+    bcrypt.genSalt(10, (error,salt) => {
+        if(error) return next(error);
+
+        bcrypt.hash(this.password, salt, (error,hash) =>{
+              if(error) return next(error);
+              this.password= hash;
+              next()  ;
+        });
+    })
+
+});
+
+const Usuarios = mongoose.model('usuarios',usuariosSchema);
+
+
+
+export { Clientes , Productos , Pedidos , Usuarios};

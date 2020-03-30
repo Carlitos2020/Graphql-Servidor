@@ -1,6 +1,21 @@
 import mongoose from 'mongoose'
-import { Clientes, Productos ,Pedidos} from "./db"
+import { Clientes, Productos ,Pedidos , Usuarios} from "./db"
 import { rejects } from 'assert'
+import bcrypt from 'bcrypt'
+
+// GenerarToken
+
+import dotenv from 'dotenv';
+dotenv.config({path:'variables.env'})
+
+import jwt from 'jsonwebtoken';
+
+const crearToken = (usuarioLogin,secreto,expiresIn)=>{
+	const {usuario} = usuarioLogin;
+
+	return jwt.sign({usuario},secreto, {expiresIn});
+}
+
 
 
 export const resolvers = {
@@ -81,36 +96,44 @@ export const resolvers = {
 				return new Promise( (resolve,object)=>{
 					
 					Pedidos.aggregate([
-							{
-								$match: {estado: "COMPLETADO"}
-							},
-							{
-								$group: {
-										_id: "$cliente",
-										total: {$sum : "$total"}
-								}
-							},
-							{
-								$lookup : {
-									from: "clientes",
-									localField: '_id',
-									foreignField: '_id',
-									as : 'cliente'
-								}
-							},
-							{
-								$sort:{ total:-1}
-							},
-							{
-								$limit: 10
-							}
+					{
+						$match: {estado: "COMPLETADO"}
+					},
+					{
+						$group: {
+							_id: "$cliente",
+							total: {$sum : "$total"}
+						}
+					},
+					{
+						$lookup : {
+							from: "clientes",
+							localField: '_id',
+							foreignField: '_id',
+							as : 'cliente'
+						}
+					},
+					{
+						$sort:{ total:-1}
+					},
+					{
+						$limit: 10
+					}
 					], (error,resultado)=>{
 						if(error) rejects(error)
-						else resolve(resultado)
-					})
+							else resolve(resultado)
+						})
 
 				})
 			},
+			obtenerUsuario : (root, args, {usuarioActual}) => {
+				if(!usuarioActual) return null;
+				console.log(usuarioActual)
+
+				const usuario= Usuarios.findOne({usuario: usuarioActual.usuario});
+
+				return usuario;
+			}
 
 
 
@@ -277,9 +300,46 @@ export const resolvers = {
 				 		})
 				 	})
 			 	
-			 }
+			 },
+
+			 // usuario de tipo asincrono
+			 crearUsuario: async(root, {usuario, password}) => {
+
+			 		// revisar si un usuario contiene este password
+			 		const existeUsuario= await Usuarios.findOne({ usuario })
+
+			 		if (existeUsuario) {
+			 			throw new Error('El usuario  ya existe')
+			 		}
+
+			 		const nuevoUsuario = await new Usuarios({
+			 			usuario,
+			 			password
+			 		}).save();
+
+			 		return "Usuario creado"
 
 
+			 	},
+
+
+			 	autenticarUsuario: async(root, {usuario, password}) => {
+			 		const nombreUsuario= await Usuarios.findOne({usuario});
+
+			 		if(!nombreUsuario){
+			 		 throw new Error('Usuario no encontrado');
+			 		}
+
+			 			const passwordCorrecto= await bcrypt.compare(password,nombreUsuario.password);
+
+			 		if (!passwordCorrecto) {
+			 			throw new Error('Password Incorrecto');
+			 		}
+
+			 		return {
+			 			token: crearToken(nombreUsuario,process.env.SECRETO,'1hr')
+			 		}
+			 	}
 
 			// -----------------------------------
 

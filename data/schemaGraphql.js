@@ -50,7 +50,12 @@ type ClienteTotal{
     cliente : [Cliente]
 }
 
-
+type Usuario{
+    usuario: String
+}
+type Token{
+    token : String
+}
 
 
 #Obtener  Datos del Cliente
@@ -70,6 +75,10 @@ type Query {
 
     #Graficas
     topClientes : [ClienteTotal]
+
+
+    #Usuarios
+    obtenerUsuario: Usuario
 }
 
 
@@ -144,6 +153,11 @@ type Mutation {
     """PEDIDOS"""
      nuevoPedido(input: PedidoInput) : Pedido
      actualizarEstado( input : PedidoInput ) : String
+
+
+     """Usuarios"""
+     crearUsuario(usuario: String! , password : String! ) : String
+     autenticarUsuario(usuario: String! , password : String! ) : Token
 }
 
 

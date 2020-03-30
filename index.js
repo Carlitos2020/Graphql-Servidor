@@ -3,8 +3,44 @@ import {ApolloServer} from 'apollo-server-express';
 import {typeDefs} from './data/schema';
 import {resolvers } from './data/resolvers.js';
 
+
+import dotenv from 'dotenv';
+dotenv.config({path:'variables.env'})
+
+import jwt from 'jsonwebtoken';
+
+
+
 const app = express();
-const server = new ApolloServer({ typeDefs, resolvers });
+// context comunica el cliente a servidor
+const server = new ApolloServer({ 
+	typeDefs, 
+	resolvers,
+	context : async({req})=>{
+		// obtener una respuesta del cliente,  en este caso el token
+		const token = req.headers['authorization'];
+
+		console.log(token)
+		if (token !== "null") {
+			try{
+				// verificamos el token del FronEnd(cliente)
+				const usuarioActual= await jwt.verify(token,process.env.SECRETO);
+
+				// agregamos el usuario actual al request
+				console.log(usuarioActual)
+
+				req.usuarioActual=usuarioActual;
+				return {
+					usuarioActual
+				}
+
+				
+			}catch(error){
+				console.log(error)
+			}
+		}
+	}
+});
 
 // conectamos Apollo Server con Express
 server.applyMiddleware({ app });
