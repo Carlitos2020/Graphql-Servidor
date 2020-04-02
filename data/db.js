@@ -18,7 +18,8 @@ const clientesSchema= new mongoose.Schema({
     emails:Array,
     edad:Number,
     tipo:String,
-    pedidos:Array
+    pedidos:Array,
+    VendedorID:mongoose.Types.ObjectId
 })
 
 // crear la tabla con el sgt Schema
@@ -43,7 +44,8 @@ const pedidoSchema= new mongoose.Schema({
     total: Number,
     fecha: Date,
     cliente:mongoose.Types.ObjectId,
-    estado:String
+    estado:String,
+    vendedor:mongoose.Types.ObjectId
 })
 
 const Pedidos = mongoose.model('pedidos',pedidoSchema);
@@ -51,7 +53,9 @@ const Pedidos = mongoose.model('pedidos',pedidoSchema);
 // Usuarios
 const usuariosSchema= new mongoose.Schema({
     usuario: String,
-    password: String
+    nombre: String,
+    password: String,
+    rol:String
 })
 
 // hashear los password antes de guardarlos en ls bd

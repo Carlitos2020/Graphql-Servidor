@@ -49,9 +49,16 @@ type ClienteTotal{
     total: Float
     cliente : [Cliente]
 }
+type VendedorTotal{
+    total: Float
+    vendedor : [Usuario]
+}
 
 type Usuario{
+    id: ID
     usuario: String
+    nombre:String
+    rol:String
 }
 type Token{
     token : String
@@ -61,9 +68,9 @@ type Token{
 #Obtener  Datos del Cliente
 type Query {
     #Obtener los Clientes
-    getClientes(limite: Int , offset: Int) : [Cliente]
+    getClientes(limite: Int , offset: Int,VendedorID:String) : [Cliente]
     getCliente(id: ID): Cliente
-    totalClientes: String
+    totalClientes(VendedorID:String): String
 
     #Producto
     obtenerProductos(limite: Int ,offset : Int,stock : Boolean) : [Producto]
@@ -75,7 +82,7 @@ type Query {
 
     #Graficas
     topClientes : [ClienteTotal]
-
+    topVendedores: [VendedorTotal]
 
     #Usuarios
     obtenerUsuario: Usuario
@@ -100,6 +107,7 @@ input ClienteInput {
     edad: Int!
     tipo: TipoCliente!
     pedidos: [PedidoInput]
+    VendedorID : ID
 }
 
 input ProductoInput{
@@ -119,6 +127,7 @@ input PedidoInput{
     fecha: String
     cliente: ID
     estado: EstadoPedido
+    vendedor : ID
 }
 
 
@@ -156,7 +165,7 @@ type Mutation {
 
 
      """Usuarios"""
-     crearUsuario(usuario: String! , password : String! ) : String
+     crearUsuario(usuario: String! ,nombre: String!, password : String!,rol :String! ) : String
      autenticarUsuario(usuario: String! , password : String! ) : Token
 }
 

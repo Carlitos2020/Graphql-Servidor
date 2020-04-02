@@ -18,13 +18,24 @@ const crearToken = (usuarioLogin,secreto,expiresIn)=>{
 
 
 
+const ObjectId= mongoose.Types.ObjectId;
+
 export const resolvers = {
 	Query: {
 
 
-			// ------------
-			getClientes:(root,{limite , offset})=>{
-				return Clientes.find({}).limit(limite).skip(offset)
+			// -----------filtrar para cada vendedor-
+			// getClientes:(root,{limite , offset})=>{
+			// 	return Clientes.find({}).limit(limite).skip(offset)
+			// },
+
+			getClientes:(root,{limite , offset,VendedorID})=>{
+				let filtro;
+				if (VendedorID) {
+					// para convertir de un String de ID a ID real
+					filtro = {VendedorID : new ObjectId(VendedorID)}
+				}
+				return Clientes.find(filtro).limit(limite).skip(offset)
 			},
 
 			getCliente: (root, { id }) => {
@@ -37,9 +48,15 @@ export const resolvers = {
 				})
 			},
 
-			totalClientes:(root) =>{
+			totalClientes:(root,{VendedorID}) =>{
 				return new Promise( (resolve,object)=>{
-					Clientes.countDocuments({},(error,count)=>{
+					let filtro;
+					if (VendedorID) {
+						// para convertir de un String de ID a ID real
+						filtro = {VendedorID : new ObjectId(VendedorID)}
+					}
+
+					Clientes.countDocuments(filtro,(error,count)=>{
 						if(error) rejects(error);
 						else resolve(count);
 					})
@@ -133,7 +150,41 @@ export const resolvers = {
 				const usuario= Usuarios.findOne({usuario: usuarioActual.usuario});
 
 				return usuario;
-			}
+			},
+			topVendedores :(root) =>{
+				return new Promise( (resolve,object)=>{
+					
+					Pedidos.aggregate([
+					{
+						$match: {estado: "COMPLETADO"}
+					},
+					{
+						$group: {
+							_id: "$vendedor",
+							total: {$sum : "$total"}
+						}
+					},
+					{
+						$lookup : {
+							from: "usuarios",
+							localField: '_id',
+							foreignField: '_id',
+							as : 'vendedor'
+						}
+					},
+					{
+						$sort:{ total:-1}
+					},
+					{
+						$limit: 10
+					}
+					], (error,resultado)=>{
+						if(error) rejects(error)
+							else resolve(resultado)
+						})
+
+				})
+			},
 
 
 
@@ -154,7 +205,8 @@ export const resolvers = {
 				emails : input.emails,
 				edad : input.edad,
 				tipo : input.tipo,
-				pedidos : input.pedidos
+				pedidos : input.pedidos,
+				VendedorID: input.VendedorID
 			})
 				// mongo agrege automaticamente un id
 				nuevoCliente.id= nuevoCliente._id
@@ -240,7 +292,8 @@ export const resolvers = {
 			 		total: input.total,
 			 		fecha: new Date(),
 			 		cliente: input.cliente,
-			 		estado:"PENDIENTE"
+			 		estado:"PENDIENTE",
+			 		vendedor:input.vendedor
 			 	});
 
 			 	nuevoPedido.id= nuevoPedido._id
@@ -303,7 +356,7 @@ export const resolvers = {
 			 },
 
 			 // usuario de tipo asincrono
-			 crearUsuario: async(root, {usuario, password}) => {
+			 crearUsuario: async(root, {usuario,nombre, password,rol}) => {
 
 			 		// revisar si un usuario contiene este password
 			 		const existeUsuario= await Usuarios.findOne({ usuario })
@@ -314,7 +367,9 @@ export const resolvers = {
 
 			 		const nuevoUsuario = await new Usuarios({
 			 			usuario,
-			 			password
+			 			nombre,
+			 			password,
+			 			rol
 			 		}).save();
 
 			 		return "Usuario creado"
@@ -327,10 +382,10 @@ export const resolvers = {
 			 		const nombreUsuario= await Usuarios.findOne({usuario});
 
 			 		if(!nombreUsuario){
-			 		 throw new Error('Usuario no encontrado');
+			 			throw new Error('Usuario no encontrado');
 			 		}
 
-			 			const passwordCorrecto= await bcrypt.compare(password,nombreUsuario.password);
+			 		const passwordCorrecto= await bcrypt.compare(password,nombreUsuario.password);
 
 			 		if (!passwordCorrecto) {
 			 			throw new Error('Password Incorrecto');
